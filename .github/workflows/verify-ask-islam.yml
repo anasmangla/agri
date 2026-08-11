@@ -1,0 +1,34 @@
+name: Verify Ask Islam Form
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/verify-ask-islam.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for and verify live form
+        run: |
+          set -euo pipefail
+          URL="https://anasmangla.github.io/agri/ask-islam/"
+          for attempt in $(seq 1 12); do
+            if curl -fsSL "$URL" -o form.html; then
+              break
+            fi
+            sleep 5
+          done
+          test -s form.html
+          grep -Fq '<title>Ask a Question About Islam | Buffalo Chapter</title>' form.html
+          grep -Fq 'https://www.alislam.org/images/AMC_logo.png' form.html
+          grep -Fq 'tabligh.buffalo@ahmadiyya.us' form.html
+          grep -Fq '9610 Colvin Blvd' form.html
+          grep -Fq '5071 Harris Hill Rd' form.html
+          grep -Fq 'https://formspree.io/f/mayvlzyv' form.html
+          echo "Live form verification passed: $URL"
