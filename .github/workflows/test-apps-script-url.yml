@@ -1,0 +1,29 @@
+name: Test Apps Script URL Patterns
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/test-apps-script-url.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test candidate URLs
+        shell: bash
+        run: |
+          set +e
+          SCRIPT_ID="16DhKnNooFFIkB4MpK7HzVmOXIvPblwBG-E7m-XKmetsdBJYN1gUt443_"
+          NEW_SCRIPT_ID="1Z9R9deTbva9syFUx7nhixmYKnNtmWOjgbUN4-NK_Ec9m3RTdQ3M8EWr3"
+          for ID in "$SCRIPT_ID" "$NEW_SCRIPT_ID"; do
+            for ENDING in exec dev; do
+              URL="https://script.google.com/macros/s/${ID}/${ENDING}"
+              echo "=== $URL ==="
+              curl -L -sS -D headers.txt -o body.txt -w 'HTTP=%{http_code} FINAL=%{url_effective}\n' "$URL"
+              head -n 8 headers.txt || true
+              head -c 400 body.txt | tr '\n' ' ' || true
+              echo
+            done
+          done
